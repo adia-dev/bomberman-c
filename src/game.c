@@ -45,6 +45,8 @@ enum Tile
     PLAYER_RIGHT,         // 'R'
     PLAYER_UP,            // 'U'
     PLAYER_DOWN,          // 'D',
+    PLAYER_DEAD,          // 'X'
+    POWERUP,              // '?'
     TILE_COUNT
 };
 
@@ -64,7 +66,10 @@ SDL_Rect tileRects[] = {
     {0, 0, 1, 1},  // PLAYER_LEFT
     {0, 1, 1, 1},  // PLAYER_RIGHT
     {3, 1, 1, 1},  // PLAYER_UP
-    {3, 0, 1, 1}   // PLAYER_DOWN
+    {3, 0, 1, 1},  // PLAYER_DOWN
+    {0, 2, 1, 1},  // PLAYER_DEAD
+    {0, 14, 1, 1}, // POWERUP
+
 };
 
 typedef struct
@@ -540,14 +545,8 @@ SDL_Rect get_tile_rect(int tile)
         return tileRects[EXPLOSION_HORIZONTAL];
     case '|':
         return tileRects[EXPLOSION_VERTICAL];
-    case 'L':
-        return tileRects[PLAYER_LEFT];
-    case 'R':
-        return tileRects[PLAYER_RIGHT];
-    case 'U':
-        return tileRects[PLAYER_UP];
-    case 'D':
-        return tileRects[PLAYER_DOWN];
+    case '?':
+        return tileRects[POWERUP];
     default:
         return tileRects[GRASS];
     }
