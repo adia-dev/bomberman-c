@@ -12,12 +12,24 @@ void init_bomb(Bomb *bomb, Player *owner)
     bomb->is_active = true;
     bomb->owner = owner;
     bomb->sprite.src_rect = tileRects[BOMB];
-    bomb->sprite.dst_rect = owner->sprite.dst_rect;
-    bomb->timer = BOMB_LIFE_TIME;
     bomb->spread_timer = BOMB_SPREAD_LIFE_TIME;
-    bomb->range = owner->bomb_range;
+    bomb->timer = BOMB_LIFE_TIME;
     bomb->spreadCoordsCount = 0;
     bomb->spreadCoords = NULL;
+    if (owner != NULL)
+    {
+        bomb->coords.x = owner->coords.x;
+        bomb->coords.y = owner->coords.y;
+        bomb->range = owner->bomb_range;
+        bomb->sprite.dst_rect = owner->sprite.dst_rect;
+    }
+    else
+    {
+        bomb->coords.x = 0;
+        bomb->coords.y = 0;
+        bomb->range = 1;
+        bomb->sprite.dst_rect = (SDL_Rect){0, 0, TILE_SIZE * SCALE, TILE_SIZE * SCALE};
+    }
 }
 
 void add_bomb(Game *game, Player *owner)
@@ -77,7 +89,7 @@ bool can_place_bomb(Game *game, SDL_Rect *rect)
 
 void update_bombs(Game *game)
 {
-    for (int i = 0; i < game->bomb_count; i++)
+    for (int i = 0; i < MAX_NUMBER_OF_BOMBS; i++)
     {
         Bomb *bomb = &game->bombs[i];
         update_bomb(game, bomb);
@@ -86,6 +98,9 @@ void update_bombs(Game *game)
 
 void update_bomb(Game *game, Bomb *bomb)
 {
+
+    if (bomb->owner == NULL)
+        return;
 
     if (bomb->is_active)
     {
@@ -110,6 +125,7 @@ void update_bomb(Game *game, Bomb *bomb)
             {
                 game->map.data[bomb->spreadCoords[j].y][bomb->spreadCoords[j].x] = ' ';
             }
+            game->map.data[bomb->sprite.dst_rect.y / (TILE_SIZE * SCALE)][bomb->sprite.dst_rect.x / (TILE_SIZE * SCALE)] = ' ';
             bomb->spreadCoordsCount = 0;
             bomb->spread_timer = BOMB_SPREAD_LIFE_TIME;
         }
@@ -120,257 +136,222 @@ void explode_bomb(Game *game, Bomb *bomb)
 {
     if (!bomb->is_active)
         return;
-    // remove the bomb from the map
+
     game->map.data[bomb->sprite.dst_rect.y / (TILE_SIZE * SCALE)][bomb->sprite.dst_rect.x / (TILE_SIZE * SCALE)] = 'x';
 
     // TODO: Free this memory allocation when the bomb is removed
     bomb->spreadCoords = malloc(sizeof(Coords) * bomb->range * 4);
 
-    printf("Exploding bomb at (%d, %d)\n", bomb->sprite.dst_rect.x / (TILE_SIZE * SCALE), bomb->sprite.dst_rect.y / (TILE_SIZE * SCALE));
-
     // add explosion
-    add_explosion(game, bomb, -1, bomb->sprite.dst_rect.x / (TILE_SIZE * SCALE), bomb->sprite.dst_rect.y / (TILE_SIZE * SCALE));
+    add_explosion(game, bomb, -1, bomb->sprite.dst_rect.x / (TILE_SIZE * SCALE), bomb->sprite.dst_rect.y / (TILE_SIZE * SCALE), bomb->range);
 
     // add explosion to the left
     for (int i = 1; i <= bomb->range; i++)
     {
-        if (add_explosion(game, bomb, LEFT, bomb->sprite.dst_rect.x / (TILE_SIZE * SCALE) - i, bomb->sprite.dst_rect.y / (TILE_SIZE * SCALE)))
+        if (add_explosion(game, bomb, LEFT, bomb->sprite.dst_rect.x / (TILE_SIZE * SCALE) - i, bomb->sprite.dst_rect.y / (TILE_SIZE * SCALE), i))
             break;
     }
 
     // add explosion to the right
     for (int i = 1; i <= bomb->range; i++)
     {
-        if (add_explosion(game, bomb, RIGHT, bomb->sprite.dst_rect.x / (TILE_SIZE * SCALE) + i, bomb->sprite.dst_rect.y / (TILE_SIZE * SCALE)))
+        if (add_explosion(game, bomb, RIGHT, bomb->sprite.dst_rect.x / (TILE_SIZE * SCALE) + i, bomb->sprite.dst_rect.y / (TILE_SIZE * SCALE), i))
             break;
     }
 
     // add explosion to the top
     for (int i = 1; i <= bomb->range; i++)
     {
-        if (add_explosion(game, bomb, UP, bomb->sprite.dst_rect.x / (TILE_SIZE * SCALE), bomb->sprite.dst_rect.y / (TILE_SIZE * SCALE) - i))
+        if (add_explosion(game, bomb, UP, bomb->sprite.dst_rect.x / (TILE_SIZE * SCALE), bomb->sprite.dst_rect.y / (TILE_SIZE * SCALE) - i, i))
             break;
     }
 
     // add explosion to the bottom
     for (int i = 1; i <= bomb->range; i++)
     {
-        if (add_explosion(game, bomb, DOWN, bomb->sprite.dst_rect.x / (TILE_SIZE * SCALE), bomb->sprite.dst_rect.y / (TILE_SIZE * SCALE) + i))
+        if (add_explosion(game, bomb, DOWN, bomb->sprite.dst_rect.x / (TILE_SIZE * SCALE), bomb->sprite.dst_rect.y / (TILE_SIZE * SCALE) + i, i))
             break;
     }
 
     bomb->is_active = false;
     bomb->owner->bomb_count++;
+    game->bomb_count--;
 
     printf("Bomb exploded\nSpread coords count: %d\n", bomb->spreadCoordsCount);
 }
 
 // add explosion to the map
-bool add_explosion(Game *game, Bomb *bomb, Direction direction, int col, int row)
+bool add_explosion(Game *game, Bomb *bomb, Direction direction, int col, int row, int range)
 {
     if (row < 0 || row >= game->map.height || col < 0 || col >= game->map.width)
     {
-        if (row <= 0)
+        return true;
+    }
+
+    if (drop_powerup(game, col, row))
+        return true;
+
+    if (game->map.data[row][col] == 'x')
+    {
+        return true;
+    }
+
+    if (game->map.data[row][col] == 'b')
+    {
+        for (int i = 0; i < MAX_NUMBER_OF_BOMBS; i++)
         {
-            if (direction == UP)
+            Bomb *other_bomb = &game->bombs[i];
+            if (other_bomb->sprite.dst_rect.x / (TILE_SIZE * SCALE) == col && other_bomb->sprite.dst_rect.y / (TILE_SIZE * SCALE) == row)
             {
-                game->map.data[1][col] = '^';
+                explode_bomb(game, other_bomb);
+                break;
             }
-            else if (direction == DOWN)
-            {
-                game->map.data[1][col] = 'v';
-            }
-            else if (direction == LEFT)
-            {
-                game->map.data[1][col] = '<';
-            }
-            else if (direction == RIGHT)
-            {
-                game->map.data[1][col] = '>';
-            }
-            else
-            {
-                game->map.data[1][col] = 'x';
-            }
-
-            bomb->spreadCoords[bomb->spreadCoordsCount].x = col;
-            bomb->spreadCoords[bomb->spreadCoordsCount].y = 1;
-            bomb->spreadCoordsCount++;
-
-            return true;
-        }
-        else if (row >= game->map.height)
-        {
-            if (direction == UP)
-            {
-                game->map.data[game->map.height - 1][col] = '^';
-            }
-            else if (direction == DOWN)
-            {
-                game->map.data[game->map.height - 1][col] = 'v';
-            }
-            else if (direction == LEFT)
-            {
-                game->map.data[game->map.height - 1][col] = '<';
-            }
-            else if (direction == RIGHT)
-            {
-                game->map.data[game->map.height - 1][col] = '>';
-            }
-            else
-            {
-                game->map.data[game->map.height - 1][col] = 'x';
-            }
-            bomb->spreadCoords[bomb->spreadCoordsCount].x = col;
-            bomb->spreadCoords[bomb->spreadCoordsCount].y = game->map.height - 1;
-            bomb->spreadCoordsCount++;
-            return true;
-        }
-        else if (col < 0)
-        {
-            if (direction == UP)
-            {
-                game->map.data[row][0] = '^';
-            }
-            else if (direction == DOWN)
-            {
-                game->map.data[row][0] = 'v';
-            }
-            else if (direction == LEFT)
-            {
-                game->map.data[row][0] = '<';
-            }
-            else if (direction == RIGHT)
-            {
-                game->map.data[row][0] = '>';
-            }
-            else
-            {
-                game->map.data[row][0] = 'x';
-            }
-
-            bomb->spreadCoords[bomb->spreadCoordsCount].x = 0;
-            bomb->spreadCoords[bomb->spreadCoordsCount].y = row;
-            bomb->spreadCoordsCount++;
-            return true;
-        }
-        else if (col >= game->map.width)
-        {
-            if (direction == UP)
-            {
-                game->map.data[row][game->map.width - 1] = '^';
-            }
-            else if (direction == DOWN)
-            {
-                game->map.data[row][game->map.width - 1] = 'v';
-            }
-            else if (direction == LEFT)
-            {
-                game->map.data[row][game->map.width - 1] = '<';
-            }
-            else if (direction == RIGHT)
-            {
-                game->map.data[row][game->map.width - 1] = '>';
-            }
-            else
-            {
-                game->map.data[row][game->map.width - 1] = 'x';
-            }
-
-            bomb->spreadCoords[bomb->spreadCoordsCount].x = game->map.width - 1;
-            bomb->spreadCoords[bomb->spreadCoordsCount].y = row;
-            bomb->spreadCoordsCount++;
-
-            return true;
         }
     }
-    else if (game->map.data[row][col] == 'w')
+
+    handle_player_explosion(game, bomb, col, row);
+
+    if (game->map.data[row][col] == 'w')
     {
+        handle_explosion_direction(game, bomb, direction, col, row, range);
+        return true;
+    }
+
+    if (game->map.data[row][col] == '.')
+    {
+
+        handle_explosion_direction(game, bomb, direction, col, row, range);
         return true;
     }
 
     if (game->map.data[row][col] == ' ')
     {
-        if (direction == -1)
-            game->map.data[row][col] = 'x';
-        else if (direction == UP || direction == DOWN)
-            game->map.data[row][col] = '|';
-        else
-            game->map.data[row][col] = '-';
-
-        bomb->spreadCoords[bomb->spreadCoordsCount].x = col;
-        bomb->spreadCoords[bomb->spreadCoordsCount].y = row;
-        bomb->spreadCoordsCount++;
-
+        handle_explosion_direction(game, bomb, direction, col, row, range);
         return false;
     }
-    else if (game->map.data[row][col] == 'b')
+
+    return false;
+}
+
+void handle_explosion_direction(Game *game, Bomb *bomb, Direction direction, int col, int row, int range)
+{
+
+    if (col < 0 || col >= game->map.width || row <= 0 || row >= game->map.height || game->map.data[row][col] == 'x')
+        return;
+
+    switch (direction)
     {
-        for (int i = 0; i < game->bomb_count; i++)
+    case UP:
+        if (is_tile_wall(game->map.data[row - 1][col]))
         {
-            Bomb *bomb = &game->bombs[i];
-            if (bomb->is_active && bomb->sprite.dst_rect.x / (TILE_SIZE * SCALE) == col && bomb->sprite.dst_rect.y / (TILE_SIZE * SCALE) == row)
+            game->map.data[row + 1][col] = '^';
+            spread_explosion(game, bomb, col, row + 1);
+        }
+        else if (game->map.data[row][col] == '.' || range == bomb->range)
+        {
+            game->map.data[row][col] = '^';
+            spread_explosion(game, bomb, col, row);
+        }
+        else if (game->map.data[row][col] == ' ')
+        {
+            game->map.data[row][col] = '|';
+            spread_explosion(game, bomb, col, row);
+        }
+        break;
+    case DOWN:
+        if (game->map.data[row][col] == 'w')
+        {
+            game->map.data[row - 1][col] = 'v';
+            spread_explosion(game, bomb, col, row - 1);
+        }
+        else if (game->map.data[row][col] == '.' || range == bomb->range)
+        {
+            game->map.data[row][col] = 'v';
+            spread_explosion(game, bomb, col, row);
+        }
+        else if (game->map.data[row][col] == ' ')
+        {
+            game->map.data[row][col] = '|';
+            spread_explosion(game, bomb, col, row);
+        }
+        break;
+    case LEFT:
+        if (game->map.data[row][col] == 'w')
+        {
+            game->map.data[row][col + 1] = '<';
+            spread_explosion(game, bomb, col + 1, row);
+        }
+        else if (game->map.data[row][col] == '.' || range == bomb->range)
+        {
+            game->map.data[row][col] = '<';
+            spread_explosion(game, bomb, col, row);
+        }
+        else if (game->map.data[row][col] == ' ')
+        {
+            game->map.data[row][col] = '-';
+            spread_explosion(game, bomb, col, row);
+        }
+        break;
+    case RIGHT:
+        if (game->map.data[row][col] == 'w')
+        {
+            game->map.data[row][col - 1] = '>';
+            spread_explosion(game, bomb, col - 1, row);
+        }
+        else if (game->map.data[row][col] == '.' || range == bomb->range)
+        {
+            game->map.data[row][col] = '>';
+            spread_explosion(game, bomb, col, row);
+        }
+        else if (game->map.data[row][col] == ' ')
+        {
+            game->map.data[row][col] = '-';
+            spread_explosion(game, bomb, col, row);
+        }
+        break;
+    default:
+        break;
+    }
+}
+
+void handle_player_explosion(Game *game, Bomb *bomb, int col, int row)
+{
+    if (is_tile_player(game->map.data[row][col]))
+    {
+        for (int i = 0; i < MAX_NUMBER_OF_PLAYERS; i++)
+        {
+            Player *player = &game->players[i];
+            if (player->sprite.dst_rect.x / (TILE_SIZE * SCALE) == col && player->sprite.dst_rect.y / (TILE_SIZE * SCALE) == row)
             {
-                explode_bomb(game, bomb);
-                return true;
+                take_damage(game, player, bomb->damage);
+                bomb->owner->score++;
+                break;
             }
         }
     }
-    else if (game->map.data[row][col] == '.')
+}
+
+bool drop_powerup(Game *game, int col, int row)
+{
+    if (game->map.data[row][col] == '.')
     {
-        if (direction == UP)
-            game->map.data[row][col] = '^';
-        else if (direction == DOWN)
-            game->map.data[row][col] = 'v';
-        else if (direction == LEFT)
-            game->map.data[row][col] = '<';
-        else if (direction == RIGHT)
-            game->map.data[row][col] = '>';
-        else
-            game->map.data[row][col] = 'x';
-
-        bomb->spreadCoords[bomb->spreadCoordsCount].x = col;
-        bomb->spreadCoords[bomb->spreadCoordsCount].y = row;
-        bomb->spreadCoordsCount++;
-
-        return true;
-    }
-    else if (game->map.data[row][col] == '1')
-    {
-        if (direction == UP)
-            game->map.data[row][col] = '^';
-        else if (direction == DOWN)
-            game->map.data[row][col] = 'v';
-        else if (direction == LEFT)
-            game->map.data[row][col] = '<';
-        else if (direction == RIGHT)
-            game->map.data[row][col] = '>';
-        else
-            game->map.data[row][col] = 'x';
-
-        bomb->spreadCoords[bomb->spreadCoordsCount].x = col;
-        bomb->spreadCoords[bomb->spreadCoordsCount].y = row;
-        bomb->spreadCoordsCount++;
-
-        return true;
+        // drop powerup randomly between 0.0 and 1.0
+        float random = (float)rand() / (float)RAND_MAX;
+        if (random < POWERUP_DROP_RATE)
+        {
+            game->map.data[row][col] = '?';
+            return true;
+        }
     }
 
-    if (direction == UP)
-        game->map.data[row][col] = '^';
-    else if (direction == DOWN)
-        game->map.data[row][col] = 'v';
-    else if (direction == LEFT)
-        game->map.data[row][col] = '<';
-    else if (direction == RIGHT)
-        game->map.data[row][col] = '>';
-    else
-        game->map.data[row][col] = 'x';
+    return false;
+}
 
+void spread_explosion(Game *game, Bomb *bomb, int col, int row)
+{
     bomb->spreadCoords[bomb->spreadCoordsCount].x = col;
     bomb->spreadCoords[bomb->spreadCoordsCount].y = row;
     bomb->spreadCoordsCount++;
-
-    return true;
 }
 
 void free_bomb(Bomb *bomb)

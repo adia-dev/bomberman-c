@@ -43,6 +43,8 @@ void init_game(Game *game)
     }
 
     init_map(&game->map);
+    init_bombs(game);
+
     load_map(&game->map, "../src/levels/level_01.txt");
     load_texture(game, "../src/assets/NES_BOMBERMAN.png");
 

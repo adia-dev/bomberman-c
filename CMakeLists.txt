@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.22.0)
 project(app C)
 
 set(CMAKE_C_STANDARD 99)
+set(CMAKE_BUILD_TYPE Debug)
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIRS})
 

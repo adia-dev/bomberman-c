@@ -1,7 +1,7 @@
 #ifndef _GAME_H_
 #define _GAME_H_
 
-#include "../player/player.h"
+#include "../objects/bombs.h"
 
 // Game functions
 void init_game(Game *game);

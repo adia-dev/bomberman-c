@@ -4,7 +4,7 @@ void init_player(Game *game, Player *player, int x, int y)
 {
     player->coords.x = x;
     player->coords.y = y;
-    player->bomb_range = 3;
+    player->bomb_range = 2;
     player->bomb_count = 100;
     player->bomb_timer = 0;
     player->speed = 1;
@@ -59,7 +59,8 @@ void draw_players(Game *game)
     for (int i = 0; i < game->player_count; i++)
     {
         Player *player = &game->players[i];
-        draw_player(game, player);
+        if (!player->is_dead)
+            draw_player(game, player);
     }
 }
 
@@ -100,10 +101,18 @@ void move_player(Game *game, Player *player, Direction direction)
 
     if (is_valid_move(game, &player_rect))
     {
-        player->direction = direction;
-        player->sprite.dst_rect = player_rect;
+
         int x = player_rect.x / (TILE_SIZE * SCALE);
         int y = player_rect.y / (TILE_SIZE * SCALE);
+
+        if (is_tile_powerup(game->map.data[y][x]))
+        {
+            printf("Give powerup to player %d\n", player->id);
+        }
+
+        player->direction = direction;
+        player->sprite.dst_rect = player_rect;
+
         game->map.data[old_y][old_x] = ' ';
         game->map.data[y][x] = get_player_tile(player);
     }
@@ -119,7 +128,7 @@ bool is_valid_move(Game *game, SDL_Rect *rect)
         return false;
     }
 
-    return game->map.data[row][col] == ' ';
+    return is_tile_empty(game->map.data[row][col]) || is_tile_powerup(game->map.data[row][col]) || is_tile_explosion(game->map.data[row][col]);
 }
 
 void update_player_rect(Player *player)
@@ -141,4 +150,42 @@ void update_player_rect(Player *player)
     default:
         break;
     }
+}
+
+void take_damage(Game *game, Player *player, int damage)
+{
+    if (player->is_powerup)
+    {
+        player->is_powerup = false;
+        player->powerup_timer = 0;
+        player->powerup = 0;
+    }
+    else
+    {
+        player->lives -= damage;
+        if (player->lives <= 0)
+        {
+            kill_player(game, player);
+        }
+    }
+}
+
+bool kill_player(Game *game, Player *player)
+{
+    if (player->is_dead)
+        return false;
+
+    printf("Player %d died\n", player->id);
+
+    player->is_dead = true;
+    player->lives--;
+    player->score -= 100;
+
+    if (player->lives <= 0)
+    {
+        game->player_count--;
+        return true;
+    }
+
+    return false;
 }

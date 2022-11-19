@@ -125,3 +125,38 @@ char get_player_tile(Player *player)
         return '0';
     }
 }
+
+bool is_tile_player(char tile)
+{
+    return tile == '1' || tile == '2' || tile == '3' || tile == '4';
+}
+
+bool is_tile_wall(char tile)
+{
+    return tile == 'w';
+}
+
+bool is_tile_breakable(char tile)
+{
+    return tile == '.';
+}
+
+bool is_tile_bomb(char tile)
+{
+    return tile == 'b';
+}
+
+bool is_tile_explosion(char tile)
+{
+    return tile == '^' || tile == 'v' || tile == '<' || tile == '>' || tile == 'x' || tile == '-' || tile == '|';
+}
+
+bool is_tile_powerup(char tile)
+{
+    return tile == '?';
+}
+
+bool is_tile_empty(char tile)
+{
+    return tile == ' ';
+}

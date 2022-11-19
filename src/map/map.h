@@ -11,4 +11,12 @@ void draw_tile(Game *game, int tile, int x, int y);
 SDL_Rect get_tile_rect(int tile);
 char get_player_tile(Player *player);
 
+bool is_tile_player(char tile);
+bool is_tile_wall(char tile);
+bool is_tile_breakable(char tile);
+bool is_tile_bomb(char tile);
+bool is_tile_explosion(char tile);
+bool is_tile_powerup(char tile);
+bool is_tile_empty(char tile);
+
 #endif
