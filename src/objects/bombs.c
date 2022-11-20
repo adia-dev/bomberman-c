@@ -34,6 +34,10 @@ void init_bomb(Bomb *bomb, Player *owner)
 
 void add_bomb(Game *game, Player *owner)
 {
+    if (owner != NULL)
+    {
+        owner->bomb_count++;
+    }
 }
 
 bool place_bomb(Game *game, Player *owner)
@@ -339,8 +343,7 @@ bool drop_powerup(Game *game, int col, int row)
         float random = (float)rand() / (float)RAND_MAX;
         if (random < POWERUP_DROP_RATE)
         {
-            game->map.data[row][col] = '?';
-            return true;
+            return spawn_powerup(game, col, row);
         }
     }
 

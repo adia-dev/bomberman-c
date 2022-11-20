@@ -62,19 +62,32 @@ typedef struct
     int spreadCoordsCount;
 } Bomb;
 
+// Powerup
+typedef struct
+{
+    Coords coords;
+    PowerupType type;
+    double timer;
+    double lifetime;
+    bool is_active;
+    Sprite sprite;
+} Powerup;
 typedef struct
 {
     bool is_running;
     SDL_Window *window;
     SDL_Renderer *renderer;
+    SDL_Texture *texture;
+    double delta_time;
+    Uint64 last_frame_time, current_frame_time;
     Map map;
     Player players[4];
     int player_count;
-    SDL_Texture *texture;
-    int bomb_count;
-    double delta_time;
+    int main_player_id;
     Bomb bombs[MAX_NUMBER_OF_BOMBS];
-    Uint64 last_frame_time, current_frame_time;
+    int bomb_count;
+    Powerup powerups[MAX_NUMBER_OF_POWERUPS];
+    int powerup_count;
 } Game;
 
 #endif

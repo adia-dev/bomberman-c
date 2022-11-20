@@ -105,9 +105,10 @@ void move_player(Game *game, Player *player, Direction direction)
         int x = player_rect.x / (TILE_SIZE * SCALE);
         int y = player_rect.y / (TILE_SIZE * SCALE);
 
-        if (is_tile_powerup(game->map.data[y][x]))
+        Powerup *powerup_in_the_way = collide_with_powerup(game, x, y);
+        if (powerup_in_the_way != NULL)
         {
-            printf("Give powerup to player %d\n", player->id);
+            consume_powerup(game, player, powerup_in_the_way);
         }
 
         player->direction = direction;
@@ -116,6 +117,37 @@ void move_player(Game *game, Player *player, Direction direction)
         game->map.data[old_y][old_x] = ' ';
         game->map.data[y][x] = get_player_tile(player);
     }
+}
+
+Powerup *collide_with_powerup(Game *game, int x, int y)
+{
+    for (int i = 0; i < MAX_NUMBER_OF_POWERUPS; i++)
+    {
+        Powerup *powerup = &game->powerups[i];
+        // if (other_bomb->sprite.dst_rect.x / (TILE_SIZE * SCALE) == col && other_bomb->sprite.dst_rect.y / (TILE_SIZE * SCALE) == row)
+        if (powerup->is_active && powerup->sprite.dst_rect.x / (TILE_SIZE * SCALE) == x && powerup->sprite.dst_rect.y / (TILE_SIZE * SCALE) == y)
+        {
+            return powerup;
+        }
+    }
+
+    return NULL;
+}
+
+bool consume_powerup(Game *game, Player *player, Powerup *powerup)
+{
+
+    player->is_powerup = true;
+    player->powerup = powerup->type;
+    player->powerup_timer = powerup->timer;
+
+    powerup->is_active = false;
+    printf("Collided with powerup %d\n", powerup->type);
+
+    game->map.data[powerup->sprite.dst_rect.y / (TILE_SIZE * SCALE)][powerup->sprite.dst_rect.x / (TILE_SIZE * SCALE)] = ' ';
+    game->powerup_count--;
+
+    return true;
 }
 
 bool is_valid_move(Game *game, SDL_Rect *rect)

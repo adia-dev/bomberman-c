@@ -35,4 +35,20 @@ enum Tile
     TILE_COUNT
 };
 
+// Powerups
+typedef enum
+{
+    POWERUP_BOMB_UP,
+    POWERUP_BOMB_DOWN,
+    POWERUP_RANGE_UP,
+    POWERUP_RANGE_DOWN,
+    POWERUP_RANGE_MAX,
+    POWERUP_TELEPORT,
+    POWERUP_KICK,
+    POWERUP_INVINCIBLE,
+    POWERUP_SHIELD,
+    POWERUP_LIFE,
+    POWERUP_COUNT
+} PowerupType;
+
 #endif

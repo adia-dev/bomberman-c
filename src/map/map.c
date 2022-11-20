@@ -102,8 +102,6 @@ SDL_Rect get_tile_rect(int tile)
         return tileRects[EXPLOSION_HORIZONTAL];
     case '|':
         return tileRects[EXPLOSION_VERTICAL];
-    case '?':
-        return tileRects[POWERUP];
     default:
         return tileRects[GRASS];
     }

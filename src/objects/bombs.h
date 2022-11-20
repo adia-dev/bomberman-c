@@ -1,7 +1,7 @@
 #ifndef _BOMBS_H_
 #define _BOMBS_H_
 
-#include "../player/player.h"
+#include "powerup.h"
 
 // Bombs functions
 void init_bombs(Game *game);

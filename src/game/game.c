@@ -8,6 +8,7 @@ void init_game(Game *game)
     game->texture = NULL;
     game->player_count = 0;
     game->bomb_count = 0;
+    game->powerup_count = 0;
     game->delta_time = 0.0;
     game->last_frame_time = 0;
     game->current_frame_time = SDL_GetPerformanceCounter();
@@ -44,6 +45,7 @@ void init_game(Game *game)
 
     init_map(&game->map);
     init_bombs(game);
+    init_powerups(game);
 
     load_map(&game->map, "../src/levels/level_01.txt");
     load_texture(game, "../src/assets/NES_BOMBERMAN.png");
@@ -150,6 +152,16 @@ void process_input(Game *game)
                     }
                 }
                 break;
+            case SDLK_TAB:
+                // switch between the 4 players
+                game->main_player_id = (game->main_player_id + 1) % game->player_count;
+                Player *main_player = &game->players[game->main_player_id];
+                current_player = main_player;
+                printf("Main player id: %d\n", game->main_player_id);
+                break;
+            case SDLK_SPACE:
+                spawn_powerup_randomly(game);
+                break;
             }
             break;
         }
@@ -167,6 +179,7 @@ void update(Game *game)
 
     // printf("DELTA TIME(ms): %f\n", game->delta_time);
     update_bombs(game);
+    update_powerups(game);
 }
 
 void render(Game *game)
@@ -176,6 +189,7 @@ void render(Game *game)
 
     draw_map(game);
     draw_players(game);
+    draw_powerups(game);
 
     SDL_RenderPresent(game->renderer);
 }
