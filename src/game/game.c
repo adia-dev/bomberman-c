@@ -188,8 +188,9 @@ void render(Game *game)
     SDL_RenderClear(game->renderer);
 
     draw_map(game);
-    draw_players(game);
     draw_powerups(game);
+    draw_bombs(game);
+    draw_players(game);
 
     SDL_RenderPresent(game->renderer);
 }

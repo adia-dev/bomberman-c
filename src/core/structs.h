@@ -35,13 +35,13 @@ typedef struct
     int score;
     int powerup;
     int powerup_timer;
+    int id;
     bool is_dead;
     bool is_moving;
     bool is_bombing;
     bool is_powerup;
     Direction direction;
     Sprite sprite;
-    int id;
 } Player;
 
 typedef struct
@@ -51,15 +51,19 @@ typedef struct
     int spread_timer;
     int range;
     int damage;
+    double animation_timer;
+    double animation_frame_delay;
     bool can_move;
     bool is_exploding;
     bool is_dead;
     bool is_moving;
     bool is_active;
+    int spreadCoordsCount;
+    int animation_frame_count;
+    int current_frame;
     Sprite sprite;
     Player *owner;
     Coords *spreadCoords;
-    int spreadCoordsCount;
 } Bomb;
 
 // Powerup
@@ -72,22 +76,23 @@ typedef struct
     bool is_active;
     Sprite sprite;
 } Powerup;
+
 typedef struct
 {
-    bool is_running;
+    Map map;
     SDL_Window *window;
     SDL_Renderer *renderer;
     SDL_Texture *texture;
-    double delta_time;
     Uint64 last_frame_time, current_frame_time;
-    Map map;
-    Player players[4];
+    bool is_running;
+    double delta_time;
     int player_count;
     int main_player_id;
-    Bomb bombs[MAX_NUMBER_OF_BOMBS];
     int bomb_count;
-    Powerup powerups[MAX_NUMBER_OF_POWERUPS];
     int powerup_count;
+    Player players[4];
+    Powerup powerups[MAX_NUMBER_OF_POWERUPS];
+    Bomb bombs[MAX_NUMBER_OF_BOMBS];
 } Game;
 
 #endif

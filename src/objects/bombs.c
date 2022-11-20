@@ -9,13 +9,18 @@ void init_bombs(Game *game)
 }
 void init_bomb(Bomb *bomb, Player *owner)
 {
-    bomb->is_active = true;
+    bomb->is_active = false;
     bomb->owner = owner;
     bomb->sprite.src_rect = tileRects[BOMB];
     bomb->spread_timer = BOMB_SPREAD_LIFE_TIME;
     bomb->timer = BOMB_LIFE_TIME;
     bomb->spreadCoordsCount = 0;
     bomb->spreadCoords = NULL;
+    bomb->animation_timer = 0.0;
+    bomb->animation_frame_delay = BOMB_ANIMATION_FRAME_DELAY;
+    bomb->animation_frame_count = 3;
+    bomb->current_frame = 0;
+
     if (owner != NULL)
     {
         bomb->coords.x = owner->coords.x;
@@ -70,6 +75,7 @@ bool place_bomb(Game *game, Player *owner)
     {
         Bomb *bomb = &game->bombs[game->bomb_count++];
         init_bomb(bomb, owner);
+        bomb->is_active = true;
         bomb->sprite.dst_rect = bomb_rect;
         game->map.data[bomb_rect.y / (TILE_SIZE * SCALE)][bomb_rect.x / (TILE_SIZE * SCALE)] = 'b';
         owner->bomb_count--;
@@ -114,7 +120,16 @@ void update_bomb(Game *game, Bomb *bomb)
         }
         else
         {
+            bomb->animation_timer += game->delta_time;
             bomb->timer -= game->delta_time;
+        }
+
+        if (bomb->animation_timer >= bomb->animation_frame_delay)
+        {
+            bomb->animation_timer = 0.0;
+            bomb->current_frame = (bomb->current_frame + 1) % bomb->animation_frame_count;
+            bomb->sprite.src_rect.x = bomb->current_frame * TILE_SIZE;
+            bomb->animation_frame_delay = lerp(bomb->animation_frame_delay, 25, 0.2);
         }
     }
     else if (bomb->spreadCoordsCount > 0)
@@ -133,6 +148,23 @@ void update_bomb(Game *game, Bomb *bomb)
             bomb->spreadCoordsCount = 0;
             bomb->spread_timer = BOMB_SPREAD_LIFE_TIME;
         }
+    }
+}
+
+void draw_bombs(Game *game)
+{
+    for (int i = 0; i < MAX_NUMBER_OF_BOMBS; i++)
+    {
+        Bomb *bomb = &game->bombs[i];
+        draw_bomb(game, bomb);
+    }
+}
+
+void draw_bomb(Game *game, Bomb *bomb)
+{
+    if (bomb->is_active)
+    {
+        SDL_RenderCopy(game->renderer, game->texture, &bomb->sprite.src_rect, &bomb->sprite.dst_rect);
     }
 }
 

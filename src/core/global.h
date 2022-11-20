@@ -1,7 +1,7 @@
 #ifndef _GLOBAL_H_
 #define _GLOBAL_H_
 
-#include "structs.h"
+#include "utils.h"
 
 extern Coords playerInitialCoords[4];
 

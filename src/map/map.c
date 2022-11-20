@@ -86,8 +86,6 @@ SDL_Rect get_tile_rect(int tile)
         return tileRects[WALL_BREAKABLE];
     case 'd':
         return tileRects[DOOR];
-    case 'b':
-        return tileRects[BOMB];
     case '^':
         return tileRects[EXPLOSION_UP];
     case 'v':
