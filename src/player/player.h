@@ -25,5 +25,6 @@ bool kill_player(Game *game, Player *player);
 
 const char *get_powerup_name(PowerupType type);
 SDL_Rect get_powerup_rect(PowerupType type);
+SDL_Color get_powerup_color(PowerupType type);
 
 #endif

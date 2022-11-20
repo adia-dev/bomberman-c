@@ -40,11 +40,13 @@ typedef struct
     bool can_kick;
     bool can_teleport;
     bool can_survive;
+    bool already_survived;
     bool is_dead;
     bool is_moving;
     bool is_bombing;
     bool is_powerup;
     Direction direction;
+    Coords spawn;
     Sprite sprite;
     SDL_Color powerup_color;
 } Player;

@@ -46,7 +46,7 @@ void draw_powerup(Game *game, Powerup *powerup)
     if (powerup->is_active)
     {
         // change the color of the powerup based on the type
-        SDL_Color color = get_powerup_color(powerup);
+        SDL_Color color = get_powerup_color(powerup->type);
         SDL_SetTextureColorMod(game->texture, color.r, color.g, color.b);
         SDL_RenderCopy(game->renderer, game->texture, &powerup->sprite.src_rect, &powerup->sprite.dst_rect);
         SDL_SetTextureColorMod(game->texture, 255, 255, 255);
@@ -91,24 +91,5 @@ void spawn_powerup_randomly(Game *game)
     {
         x = rand() % game->map.width;
         y = rand() % game->map.height;
-    }
-}
-
-SDL_Color get_powerup_color(Powerup *powerup)
-{
-    switch (powerup->type)
-    {
-    case POWERUP_BOMB_DOWN:
-        return (SDL_Color){255, 0, 0, 255};
-        break;
-    case POWERUP_RANGE_DOWN:
-        return (SDL_Color){255, 0, 0, 255};
-        break;
-    case POWERUP_RANGE_MAX:
-        return (SDL_Color){0, 255, 0, 255};
-        break;
-    default:
-        return (SDL_Color){255, 255, 255, 255};
-        break;
     }
 }
