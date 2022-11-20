@@ -272,15 +272,16 @@ bool add_explosion(Game *game, Bomb *bomb, Direction direction, int col, int row
 void handle_explosion_direction(Game *game, Bomb *bomb, Direction direction, int col, int row, int range)
 {
 
-    if (col < 0 || col >= game->map.width || row <= 0 || row >= game->map.height || game->map.data[row][col] == 'x')
+    if (col < 0 || col >= game->map.width || row <= 0 || row >= game->map.height)
         return;
 
     switch (direction)
     {
     case UP:
-        if (is_tile_wall(game->map.data[row - 1][col]))
+        if (is_tile_wall(game->map.data[row][col]))
         {
-            game->map.data[row + 1][col] = '^';
+            if (range != 1)
+                game->map.data[row + 1][col] = '^';
             spread_explosion(game, bomb, col, row + 1);
         }
         else if (game->map.data[row][col] == '.' || range == bomb->range)
@@ -297,12 +298,14 @@ void handle_explosion_direction(Game *game, Bomb *bomb, Direction direction, int
     case DOWN:
         if (game->map.data[row][col] == 'w')
         {
-            game->map.data[row - 1][col] = 'v';
+            if (range != 1)
+                game->map.data[row - 1][col] = 'v';
             spread_explosion(game, bomb, col, row - 1);
         }
         else if (game->map.data[row][col] == '.' || range == bomb->range)
         {
-            game->map.data[row][col] = 'v';
+            if (range != 1)
+                game->map.data[row][col] = 'v';
             spread_explosion(game, bomb, col, row);
         }
         else if (game->map.data[row][col] == ' ')
@@ -314,7 +317,8 @@ void handle_explosion_direction(Game *game, Bomb *bomb, Direction direction, int
     case LEFT:
         if (game->map.data[row][col] == 'w')
         {
-            game->map.data[row][col + 1] = '<';
+            if (range != 1)
+                game->map.data[row][col + 1] = '<';
             spread_explosion(game, bomb, col + 1, row);
         }
         else if (game->map.data[row][col] == '.' || range == bomb->range)
@@ -331,7 +335,8 @@ void handle_explosion_direction(Game *game, Bomb *bomb, Direction direction, int
     case RIGHT:
         if (game->map.data[row][col] == 'w')
         {
-            game->map.data[row][col - 1] = '>';
+            if (range != 1)
+                game->map.data[row][col - 1] = '>';
             spread_explosion(game, bomb, col - 1, row);
         }
         else if (game->map.data[row][col] == '.' || range == bomb->range)
