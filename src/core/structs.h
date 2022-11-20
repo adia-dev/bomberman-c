@@ -36,12 +36,17 @@ typedef struct
     int powerup;
     int powerup_timer;
     int id;
+    double invincible_timer;
+    bool can_kick;
+    bool can_teleport;
+    bool can_survive;
     bool is_dead;
     bool is_moving;
     bool is_bombing;
     bool is_powerup;
     Direction direction;
     Sprite sprite;
+    SDL_Color powerup_color;
 } Player;
 
 typedef struct
@@ -86,6 +91,7 @@ typedef struct
     Uint64 last_frame_time, current_frame_time;
     bool is_running;
     double delta_time;
+    double timer;
     int player_count;
     int main_player_id;
     int bomb_count;

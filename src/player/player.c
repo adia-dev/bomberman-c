@@ -19,6 +19,16 @@ void init_player(Game *game, Player *player, int x, int y)
     player->direction = DOWN;
     player->sprite.texture = NULL;
 
+    // powerups
+    player->can_kick = false;
+    player->can_teleport = false;
+    player->can_survive = false;
+    player->invincible_timer = 0;
+    player->powerup_color.r = 255;
+    player->powerup_color.g = 255;
+    player->powerup_color.b = 255;
+    player->powerup_color.a = 255;
+
     SDL_Rect src_rect = {0, 0, TILE_SIZE, TILE_SIZE};
     SDL_Rect dst_rect = {x * TILE_SIZE * SCALE, y * TILE_SIZE * SCALE, TILE_SIZE * SCALE, TILE_SIZE * SCALE};
 
@@ -68,7 +78,29 @@ void draw_player(Game *game, Player *player)
 {
     update_player_rect(player);
 
-    SDL_RenderCopy(game->renderer, game->texture, &player->sprite.src_rect, &player->sprite.dst_rect);
+    // SDL_RenderCopy(game->renderer, game->texture, &player->sprite.src_rect, &player->sprite.dst_rect);
+    if (player->invincible_timer > 1.f)
+    {
+        SDL_SetTextureColorMod(game->texture, 200, 155, 255);
+        SDL_RenderCopy(game->renderer, game->texture, &player->sprite.src_rect, &player->sprite.dst_rect);
+        SDL_SetTextureColorMod(game->texture, 255, 255, 255);
+    }
+    else if (player->is_powerup)
+    {
+        SDL_SetTextureColorMod(game->texture, player->powerup_color.r, player->powerup_color.g, player->powerup_color.b);
+        SDL_RenderCopy(game->renderer, game->texture, &player->sprite.src_rect, &player->sprite.dst_rect);
+        SDL_SetTextureColorMod(game->texture, 255, 255, 255);
+    }
+    else if (player->can_survive)
+    {
+        SDL_SetTextureColorMod(game->texture, 0, 0, 255);
+        SDL_RenderCopy(game->renderer, game->texture, &player->sprite.src_rect, &player->sprite.dst_rect);
+        SDL_SetTextureColorMod(game->texture, 255, 255, 255);
+    }
+    else
+    {
+        SDL_RenderCopy(game->renderer, game->texture, &player->sprite.src_rect, &player->sprite.dst_rect);
+    }
 }
 
 void move_player(Game *game, Player *player, Direction direction)
@@ -141,8 +173,43 @@ bool consume_powerup(Game *game, Player *player, Powerup *powerup)
     player->powerup = powerup->type;
     player->powerup_timer = powerup->timer;
 
+    // update the powerup flags for the player based on the powerup type
+    switch (powerup->type)
+    {
+    case POWERUP_BOMB_UP:
+        player->bomb_count++;
+        break;
+    case POWERUP_BOMB_DOWN:
+        player->bomb_count = max(player->bomb_count--, 1);
+        break;
+    case POWERUP_RANGE_UP:
+        player->bomb_range++;
+        break;
+    case POWERUP_RANGE_DOWN:
+        player->bomb_range = (player->bomb_range--, 1);
+        break;
+    case POWERUP_RANGE_MAX:
+        player->bomb_range = MAX_BOMB_RANGE;
+        break;
+    case POWERUP_TELEPORT:
+        player->can_teleport = true;
+        break;
+    case POWERUP_KICK:
+        player->can_kick = true;
+        break;
+    case POWERUP_SHIELD:
+        player->can_survive = true;
+        break;
+    case POWERUP_INVINCIBLE:
+        printf("Player %d is invincible\n", player->id);
+        player->invincible_timer = POWERUP_INVINCIBLE_DURATION;
+        break;
+    default:
+        break;
+    }
+
     powerup->is_active = false;
-    printf("Collided with powerup %d\n", powerup->type);
+    printf("Collided with powerup %s\n", get_powerup_name(powerup->type));
 
     game->map.data[powerup->sprite.dst_rect.y / (TILE_SIZE * SCALE)][powerup->sprite.dst_rect.x / (TILE_SIZE * SCALE)] = ' ';
     game->powerup_count--;
@@ -161,6 +228,27 @@ bool is_valid_move(Game *game, SDL_Rect *rect)
     }
 
     return is_tile_empty(game->map.data[row][col]) || is_tile_powerup(game->map.data[row][col]) || is_tile_explosion(game->map.data[row][col]);
+}
+
+void update_players(Game *game)
+{
+    for (int i = 0; i < game->player_count; i++)
+    {
+        Player *player = &game->players[i];
+        if (!player->is_dead)
+            update_player(game, player);
+    }
+}
+
+void update_player(Game *game, Player *player)
+{
+    player->invincible_timer -= game->delta_time / 1000.0;
+    if (player->invincible_timer <= 0)
+    {
+        player->invincible_timer = 0.0f;
+    }
+    else
+        printf("invincible timer: %f\n", player->invincible_timer);
 }
 
 void update_player_rect(Player *player)
@@ -189,7 +277,7 @@ void take_damage(Game *game, Player *player, int damage)
     if (player->is_powerup)
     {
         player->is_powerup = false;
-        player->powerup_timer = 0;
+        player->can_survive = false;
         player->powerup = 0;
     }
     else
@@ -220,4 +308,45 @@ bool kill_player(Game *game, Player *player)
     }
 
     return false;
+}
+
+const char *get_powerup_name(PowerupType type)
+{
+    switch (type)
+    {
+    case POWERUP_BOMB_UP:
+        return "Bomb Up";
+        break;
+    case POWERUP_BOMB_DOWN:
+        return "Bomb Down";
+        break;
+    case POWERUP_RANGE_UP:
+        return "Range Up";
+        break;
+    case POWERUP_RANGE_DOWN:
+        return "Range Down";
+        break;
+    case POWERUP_RANGE_MAX:
+        return "Range Max";
+        break;
+    case POWERUP_TELEPORT:
+        return "Teleport";
+        break;
+    case POWERUP_KICK:
+        return "Kick";
+        break;
+    case POWERUP_SHIELD:
+        return "Shield";
+        break;
+    case POWERUP_INVINCIBLE:
+        return "Invincible";
+        break;
+    case POWERUP_LIFE:
+        return "Life";
+        break;
+    default:
+        return "Unknown";
+        break;
+    }
+    return "Unknown";
 }

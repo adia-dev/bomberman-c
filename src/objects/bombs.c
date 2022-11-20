@@ -212,8 +212,6 @@ void explode_bomb(Game *game, Bomb *bomb)
     bomb->is_active = false;
     bomb->owner->bomb_count++;
     game->bomb_count--;
-
-    printf("Bomb exploded\nSpread coords count: %d\n", bomb->spreadCoordsCount);
 }
 
 // add explosion to the map
@@ -364,6 +362,12 @@ void handle_player_explosion(Game *game, Bomb *bomb, int col, int row)
             Player *player = &game->players[i];
             if (player->sprite.dst_rect.x / (TILE_SIZE * SCALE) == col && player->sprite.dst_rect.y / (TILE_SIZE * SCALE) == row)
             {
+                if (player->invincible_timer > 0)
+                {
+                    player->invincible_timer = 0;
+                    break;
+                }
+
                 take_damage(game, player, bomb->damage);
                 bomb->owner->score++;
                 break;

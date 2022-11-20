@@ -10,6 +10,7 @@ void init_game(Game *game)
     game->bomb_count = 0;
     game->powerup_count = 0;
     game->delta_time = 0.0;
+    game->timer = 0.0;
     game->last_frame_time = 0;
     game->current_frame_time = SDL_GetPerformanceCounter();
 
@@ -176,10 +177,14 @@ void update(Game *game)
     game->current_frame_time = SDL_GetPerformanceCounter();
 
     game->delta_time = (double)((game->current_frame_time - game->last_frame_time) * 1000 / (double)SDL_GetPerformanceFrequency());
+    game->timer += game->delta_time;
+
+    // printf("Timer: %f\n", game->timer);
 
     // printf("DELTA TIME(ms): %f\n", game->delta_time);
     update_bombs(game);
     update_powerups(game);
+    update_players(game);
 }
 
 void render(Game *game)
