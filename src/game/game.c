@@ -11,6 +11,7 @@ void init_game(Game *game)
     game->powerup_count = 0;
     game->delta_time = 0.0;
     game->timer = 0.0;
+    game->powerup_timer = 3 * POWERUP_SPAWN_DELAY / 4.0;
     game->last_frame_time = 0;
     game->current_frame_time = SDL_GetPerformanceCounter();
 
@@ -180,6 +181,15 @@ void update(Game *game)
 
     game->delta_time = (double)((game->current_frame_time - game->last_frame_time) * 1000 / (double)SDL_GetPerformanceFrequency());
     game->timer += game->delta_time;
+    game->powerup_timer += game->delta_time;
+
+    if (game->powerup_timer > POWERUP_SPAWN_DELAY)
+    {
+        spawn_powerup_randomly(game);
+        spawn_powerup_randomly(game);
+        spawn_powerup_randomly(game);
+        game->powerup_timer = 0;
+    }
 
     // printf("Timer: %f\n", game->timer);
 

@@ -97,6 +97,7 @@ typedef struct
     bool is_running;
     double delta_time;
     double timer;
+    double powerup_timer;
     int player_count;
     int main_player_id;
     int bomb_count;

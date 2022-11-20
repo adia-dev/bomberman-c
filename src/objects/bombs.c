@@ -271,9 +271,22 @@ void explode_bomb(Game *game, Bomb *bomb)
 // add explosion to the map
 bool add_explosion(Game *game, Bomb *bomb, Direction direction, int col, int row, int range)
 {
-    if (row < 0 || row >= game->map.height || col < 0 || col >= game->map.width)
+    // check if the explosion is out of bounds, if so add the explosion on the other side of the map if the cell is empty
+    if (col < 0)
     {
-        return true;
+        col = game->map.width - 1;
+    }
+    else if (col >= game->map.width)
+    {
+        col = 0;
+    }
+    else if (row < 0)
+    {
+        row = game->map.height - 1;
+    }
+    else if (row >= game->map.height)
+    {
+        row = 0;
     }
 
     if (drop_powerup(game, col, row))
