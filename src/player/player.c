@@ -100,6 +100,7 @@ void draw_player(Game *game, Player *player)
     }
 
     draw_player_powerups(game, player);
+    draw_player_lives(game, player);
 }
 
 void draw_player_powerups(Game *game, Player *player)
@@ -197,6 +198,25 @@ void draw_player_powerups(Game *game, Player *player)
 
     if (x != 0)
         SDL_RenderCopy(game->renderer, game->texture, &powerup_rect, &powerup_dst_rect);
+}
+
+void draw_player_lives(Game *game, Player *player)
+{
+    // TODO: draw the player lives on the right side of the screen
+    SDL_Rect powerup_rect = get_powerup_rect(POWERUP_LIFE);
+    SDL_Color color = get_powerup_color(POWERUP_LIFE);
+    SDL_Rect powerup_dst_rect = {0, window_height - UI_SIZE, UI_SIZE, UI_SIZE};
+
+    SDL_SetTextureColorMod(game->texture, color.r, color.g, color.b);
+    int x = window_width - UI_SIZE;
+
+    for (size_t i = 0; i < player->lives; i++)
+    {
+        powerup_dst_rect.x = x;
+        SDL_RenderCopy(game->renderer, game->texture, &powerup_rect, &powerup_dst_rect);
+        x -= UI_SIZE;
+    }
+    SDL_SetTextureColorMod(game->texture, 255, 255, 255);
 }
 
 void move_player(Game *game, Player *player, Direction direction)

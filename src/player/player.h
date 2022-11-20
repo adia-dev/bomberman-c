@@ -9,6 +9,7 @@ void add_player(Game *game);
 void draw_players(Game *game);
 void draw_player(Game *game, Player *player);
 void draw_player_powerups(Game *game, Player *player);
+void draw_player_lives(Game *game, Player *player);
 void move_player(Game *game, Player *player, Direction direction);
 Powerup *collide_with_powerup(Game *game, int x, int y);
 Bomb *collide_with_bomb(Game *game, int x, int y);

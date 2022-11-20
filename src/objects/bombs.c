@@ -120,7 +120,6 @@ void update_bomb(Game *game, Bomb *bomb)
         if (bomb->is_moving)
         {
             bomb->move_timer -= game->delta_time;
-            printf("move timer: %f\n", bomb->move_timer);
 
             if (bomb->move_timer <= 0.0)
             {
