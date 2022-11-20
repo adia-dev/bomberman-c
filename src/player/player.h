@@ -15,6 +15,7 @@ Bomb *collide_with_bomb(Game *game, int x, int y);
 bool consume_powerup(Game *game, Player *player, Powerup *powerup);
 bool is_valid_move(Game *game, Player *player, SDL_Rect *rect);
 bool kick_bomb(Game *game, Bomb *bomb, Direction direction);
+bool teleport_player(Game *game, Player *player, int x, int y);
 void update_players(Game *game);
 void update_player(Game *game, Player *player);
 void update_player_rect(Player *player);

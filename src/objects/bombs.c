@@ -10,6 +10,7 @@ void init_bombs(Game *game)
 void init_bomb(Bomb *bomb, Player *owner)
 {
     bomb->is_active = false;
+    bomb->is_moving = false;
     bomb->owner = owner;
     bomb->sprite.src_rect = tileRects[BOMB];
     bomb->spread_timer = BOMB_SPREAD_LIFE_TIME;

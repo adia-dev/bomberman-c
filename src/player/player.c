@@ -229,6 +229,9 @@ void move_player(Game *game, Player *player, Direction direction)
         int x = player_rect.x / (TILE_SIZE * SCALE);
         int y = player_rect.y / (TILE_SIZE * SCALE);
 
+        if (teleport_player(game, player, x, y))
+            return;
+
         Powerup *powerup_in_the_way = collide_with_powerup(game, x, y);
         if (powerup_in_the_way != NULL)
         {
@@ -307,9 +310,11 @@ bool consume_powerup(Game *game, Player *player, Powerup *powerup)
         break;
     case POWERUP_TELEPORT:
         player->can_teleport = true;
+        player->can_kick = false;
         break;
     case POWERUP_KICK:
         player->can_kick = true;
+        player->can_teleport = false;
         break;
     case POWERUP_SHIELD:
         player->can_survive = true;
@@ -341,7 +346,7 @@ bool is_valid_move(Game *game, Player *player, SDL_Rect *rect)
         return false;
     }
 
-    return is_tile_empty(game->map.data[row][col]) || is_tile_powerup(game->map.data[row][col]) || (player->can_kick && is_tile_bomb(game->map.data[row][col]));
+    return is_tile_empty(game->map.data[row][col]) || is_tile_powerup(game->map.data[row][col]) || (player->can_kick && is_tile_bomb(game->map.data[row][col]) || (player->can_teleport && is_tile_bomb(game->map.data[row][col])));
 }
 
 bool kick_bomb(Game *game, Bomb *bomb, Direction direction)
@@ -355,6 +360,58 @@ bool kick_bomb(Game *game, Bomb *bomb, Direction direction)
     bomb->direction = direction;
 
     return true;
+}
+
+bool teleport_player(Game *game, Player *player, int x, int y)
+{
+    // try to teleport the player to behind the bomb or group of bombs
+    // if there is a bomb in the way, teleport the player to the other side of the bomb
+
+    if (game == NULL || player == NULL || !player->can_teleport)
+    {
+        return false;
+    }
+
+    SDL_Rect player_rect = player->sprite.dst_rect;
+
+    int old_x = player_rect.x / (TILE_SIZE * SCALE);
+    int old_y = player_rect.y / (TILE_SIZE * SCALE);
+
+    Bomb *bomb_in_the_way = NULL;
+
+    while ((bomb_in_the_way = collide_with_bomb(game, x, y)) != NULL)
+    {
+        switch (player->direction)
+        {
+        case LEFT:
+            player_rect.x -= TILE_SIZE * SCALE;
+            break;
+        case RIGHT:
+            player_rect.x += TILE_SIZE * SCALE;
+            break;
+        case UP:
+            player_rect.y -= TILE_SIZE * SCALE;
+            break;
+        case DOWN:
+            player_rect.y += TILE_SIZE * SCALE;
+            break;
+        default:
+            break;
+        }
+
+        x = player_rect.x / (TILE_SIZE * SCALE);
+        y = player_rect.y / (TILE_SIZE * SCALE);
+    }
+
+    if (is_valid_move(game, player, &player_rect))
+    {
+        player->sprite.dst_rect = player_rect;
+        game->map.data[old_y][old_x] = ' ';
+        game->map.data[y][x] = 'P';
+        return true;
+    }
+
+    return false;
 }
 
 void update_players(Game *game)
