@@ -101,6 +101,98 @@ void draw_player(Game *game, Player *player)
     {
         SDL_RenderCopy(game->renderer, game->texture, &player->sprite.src_rect, &player->sprite.dst_rect);
     }
+
+    draw_player_powerups(game, player);
+}
+
+void draw_player_powerups(Game *game, Player *player)
+{
+    SDL_Rect powerup_rect = get_powerup_rect(-1);
+    SDL_Rect powerup_dst_rect = {0, window_height - UI_SIZE, UI_SIZE, UI_SIZE};
+
+    int x = 0;
+
+    if (player->invincible_timer > 1.f)
+    {
+        powerup_rect = get_powerup_rect(POWERUP_INVINCIBLE);
+        powerup_dst_rect.x = x;
+        SDL_RenderCopy(game->renderer, game->texture, &powerup_rect, &powerup_dst_rect);
+        x += UI_SIZE;
+    }
+
+    if (player->can_survive)
+    {
+        powerup_rect = get_powerup_rect(POWERUP_SHIELD);
+        powerup_dst_rect.x = x;
+        SDL_RenderCopy(game->renderer, game->texture, &powerup_rect, &powerup_dst_rect);
+        x += UI_SIZE;
+    }
+
+    if (player->can_kick)
+    {
+        powerup_rect = get_powerup_rect(POWERUP_KICK);
+        powerup_dst_rect.x = x;
+        SDL_RenderCopy(game->renderer, game->texture, &powerup_rect, &powerup_dst_rect);
+        x += UI_SIZE;
+    }
+
+    if (player->can_teleport)
+    {
+        powerup_rect = get_powerup_rect(POWERUP_TELEPORT);
+        powerup_dst_rect.x = x;
+        SDL_RenderCopy(game->renderer, game->texture, &powerup_rect, &powerup_dst_rect);
+        x += UI_SIZE;
+    }
+
+    if (player->bomb_range == 1)
+    {
+        powerup_rect = get_powerup_rect(POWERUP_RANGE_DOWN);
+        powerup_dst_rect.x = x;
+        // red color
+        SDL_SetTextureColorMod(game->texture, 255, 0, 0);
+        SDL_RenderCopy(game->renderer, game->texture, &powerup_rect, &powerup_dst_rect);
+        // reset color
+        SDL_SetTextureColorMod(game->texture, 255, 255, 255);
+        x += UI_SIZE;
+    }
+    else if (player->bomb_range == MAX_BOMB_RANGE)
+    {
+        powerup_rect = get_powerup_rect(POWERUP_RANGE_UP);
+        powerup_dst_rect.x = x;
+        // green color
+        SDL_SetTextureColorMod(game->texture, 0, 255, 0);
+        SDL_RenderCopy(game->renderer, game->texture, &powerup_rect, &powerup_dst_rect);
+        // reset color
+        SDL_SetTextureColorMod(game->texture, 255, 255, 255);
+        x += UI_SIZE;
+        printf("MAX BOMB RANGE\n");
+    }
+
+    if (player->bomb_count == 1)
+    {
+        powerup_rect = get_powerup_rect(POWERUP_BOMB_DOWN);
+        powerup_dst_rect.x = x;
+        // red color
+        SDL_SetTextureColorMod(game->texture, 255, 0, 0);
+        SDL_RenderCopy(game->renderer, game->texture, &powerup_rect, &powerup_dst_rect);
+        // reset color
+        SDL_SetTextureColorMod(game->texture, 255, 255, 255);
+        x += UI_SIZE;
+    }
+    else if (player->bomb_count == MAX_NUMBER_OF_BOMBS)
+    {
+        powerup_rect = get_powerup_rect(POWERUP_BOMB_UP);
+        powerup_dst_rect.x = x;
+        // green color
+        SDL_SetTextureColorMod(game->texture, 0, 255, 0);
+        SDL_RenderCopy(game->renderer, game->texture, &powerup_rect, &powerup_dst_rect);
+        // reset color
+        SDL_SetTextureColorMod(game->texture, 255, 255, 255);
+        x += UI_SIZE;
+    }
+
+    if (x != 0)
+        SDL_RenderCopy(game->renderer, game->texture, &powerup_rect, &powerup_dst_rect);
 }
 
 void move_player(Game *game, Player *player, Direction direction)
@@ -247,8 +339,6 @@ void update_player(Game *game, Player *player)
     {
         player->invincible_timer = 0.0f;
     }
-    else
-        printf("invincible timer: %f\n", player->invincible_timer);
 }
 
 void update_player_rect(Player *player)
@@ -349,4 +439,39 @@ const char *get_powerup_name(PowerupType type)
         break;
     }
     return "Unknown";
+}
+SDL_Rect get_powerup_rect(PowerupType type)
+{
+    switch (type)
+    {
+    case POWERUP_BOMB_UP:
+    case POWERUP_BOMB_DOWN:
+        return (SDL_Rect){0 * TILE_SIZE, 14 * TILE_SIZE, TILE_SIZE, TILE_SIZE};
+        break;
+    case POWERUP_RANGE_UP:
+    case POWERUP_RANGE_DOWN:
+    case POWERUP_RANGE_MAX:
+        return (SDL_Rect){1 * TILE_SIZE, 14 * TILE_SIZE, TILE_SIZE, TILE_SIZE};
+        break;
+    case POWERUP_TELEPORT:
+        return (SDL_Rect){3 * TILE_SIZE, 14 * TILE_SIZE, TILE_SIZE, TILE_SIZE};
+        break;
+    case POWERUP_KICK:
+        return (SDL_Rect){5 * TILE_SIZE, 14 * TILE_SIZE, TILE_SIZE, TILE_SIZE};
+        break;
+    case POWERUP_INVINCIBLE:
+        return (SDL_Rect){6 * TILE_SIZE, 14 * TILE_SIZE, TILE_SIZE, TILE_SIZE};
+        break;
+    case POWERUP_SHIELD:
+        return (SDL_Rect){4 * TILE_SIZE, 14 * TILE_SIZE, TILE_SIZE, TILE_SIZE};
+        break;
+    case POWERUP_LIFE:
+        return (SDL_Rect){2 * TILE_SIZE, 14 * TILE_SIZE, TILE_SIZE, TILE_SIZE};
+        break;
+    default:
+        return (SDL_Rect){0 * TILE_SIZE, 14 * TILE_SIZE, TILE_SIZE, TILE_SIZE};
+        break;
+    }
+
+    return (SDL_Rect){0 * TILE_SIZE, 14 * TILE_SIZE, TILE_SIZE, TILE_SIZE};
 }

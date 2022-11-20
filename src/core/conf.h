@@ -11,13 +11,14 @@
 #include <SDL2/SDL_image.h>
 
 #define TILE_SIZE 16
-#define SCALE 4
+#define SCALE 3
 #define TEXTURE_WIDTH 224
 #define TEXTURE_HEIGHT 384
-#define MAX_BUFFER_SIZE 4096
-
 #define MAX_MAP_WIDTH 20
 #define MAX_MAP_HEIGHT 20
+#define UI_SIZE 20
+
+#define MAX_BUFFER_SIZE 4096
 
 #define MAX_NUMBER_OF_BOMBS 20
 #define MAX_NUMBER_OF_POWERUPS 100

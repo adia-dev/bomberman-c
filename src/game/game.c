@@ -52,7 +52,9 @@ void init_game(Game *game)
     load_texture(game, "../src/assets/NES_BOMBERMAN.png");
 
     // resize window the size of a TILE_SIZE and the map width and height
-    SDL_SetWindowSize(game->window, game->map.width * TILE_SIZE * SCALE, game->map.height * TILE_SIZE * SCALE);
+    SDL_SetWindowSize(game->window, game->map.width * TILE_SIZE * SCALE, game->map.height * TILE_SIZE * SCALE + UI_SIZE);
+    window_height = game->map.height * TILE_SIZE * SCALE + UI_SIZE;
+    window_width = game->map.width * TILE_SIZE * SCALE;
 }
 
 void load_texture(Game *game, const char *filename)

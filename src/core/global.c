@@ -27,3 +27,6 @@ SDL_Rect tileRects[] = {
     {0, 14, 1, 1}, // POWERUP
 
 };
+
+int window_width = 0;
+int window_height = 0;

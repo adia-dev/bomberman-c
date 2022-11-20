@@ -72,7 +72,7 @@ bool spawn_powerup(Game *game, int x, int y)
     powerup->is_active = true;
     powerup->type = random_powerup;
 
-    powerup->sprite.src_rect = get_powerup_rect(powerup);
+    powerup->sprite.src_rect = get_powerup_rect(powerup->type);
     powerup->sprite.dst_rect.x = x * TILE_SIZE * SCALE;
     powerup->sprite.dst_rect.y = y * TILE_SIZE * SCALE;
 
@@ -91,42 +91,6 @@ void spawn_powerup_randomly(Game *game)
         x = rand() % game->map.width;
         y = rand() % game->map.height;
     }
-}
-
-SDL_Rect get_powerup_rect(Powerup *powerup)
-{
-    switch (powerup->type)
-    {
-    case POWERUP_BOMB_UP:
-    case POWERUP_BOMB_DOWN:
-        return (SDL_Rect){0 * TILE_SIZE, 14 * TILE_SIZE, TILE_SIZE, TILE_SIZE};
-        break;
-    case POWERUP_RANGE_UP:
-    case POWERUP_RANGE_DOWN:
-    case POWERUP_RANGE_MAX:
-        return (SDL_Rect){1 * TILE_SIZE, 14 * TILE_SIZE, TILE_SIZE, TILE_SIZE};
-        break;
-    case POWERUP_TELEPORT:
-        return (SDL_Rect){3 * TILE_SIZE, 14 * TILE_SIZE, TILE_SIZE, TILE_SIZE};
-        break;
-    case POWERUP_KICK:
-        return (SDL_Rect){5 * TILE_SIZE, 14 * TILE_SIZE, TILE_SIZE, TILE_SIZE};
-        break;
-    case POWERUP_INVINCIBLE:
-        return (SDL_Rect){6 * TILE_SIZE, 14 * TILE_SIZE, TILE_SIZE, TILE_SIZE};
-        break;
-    case POWERUP_SHIELD:
-        return (SDL_Rect){4 * TILE_SIZE, 14 * TILE_SIZE, TILE_SIZE, TILE_SIZE};
-        break;
-    case POWERUP_LIFE:
-        return (SDL_Rect){2 * TILE_SIZE, 14 * TILE_SIZE, TILE_SIZE, TILE_SIZE};
-        break;
-    default:
-        return (SDL_Rect){0 * TILE_SIZE, 14 * TILE_SIZE, TILE_SIZE, TILE_SIZE};
-        break;
-    }
-
-    return (SDL_Rect){0 * TILE_SIZE, 14 * TILE_SIZE, TILE_SIZE, TILE_SIZE};
 }
 
 SDL_Color get_powerup_color(Powerup *powerup)
