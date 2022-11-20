@@ -372,8 +372,41 @@ bool is_valid_move(Game *game, Player *player, SDL_Rect *rect)
     int row = rect->y / (TILE_SIZE * SCALE);
     int col = rect->x / (TILE_SIZE * SCALE);
 
-    if (row < 0 || row >= game->map.height || col < 0 || col >= game->map.width)
+    // check if the player is trying to move out of the map bounds, teleport on the other side if the other side is a valid move
+    if (col < 0)
     {
+        if (is_valid_move(game, player, &(SDL_Rect){(game->map.width - 1) * TILE_SIZE * SCALE, rect->y, rect->w, rect->h}))
+        {
+            rect->x = (game->map.width - 1) * TILE_SIZE * SCALE;
+            return true;
+        }
+        return false;
+    }
+    else if (col >= game->map.width)
+    {
+        if (is_valid_move(game, player, &(SDL_Rect){0, rect->y, rect->w, rect->h}))
+        {
+            rect->x = 0;
+            return true;
+        }
+        return false;
+    }
+    else if (row < 0)
+    {
+        if (is_valid_move(game, player, &(SDL_Rect){rect->x, (game->map.height - 1) * TILE_SIZE * SCALE, rect->w, rect->h}))
+        {
+            rect->y = (game->map.height - 1) * TILE_SIZE * SCALE;
+            return true;
+        }
+        return false;
+    }
+    else if (row >= game->map.height)
+    {
+        if (is_valid_move(game, player, &(SDL_Rect){rect->x, 0, rect->w, rect->h}))
+        {
+            rect->y = 0;
+            return true;
+        }
         return false;
     }
 
