@@ -8,7 +8,7 @@ void init_player(Game *game, Player *player, int x, int y)
     player->bomb_count = 100;
     player->bomb_timer = 0;
     player->speed = 1;
-    player->lives = 10;
+    player->lives = 3;
     player->score = 0;
     player->powerup = 0;
     player->powerup_timer = 0;
@@ -51,13 +51,14 @@ void add_player(Game *game)
         Player *player = &game->players[game->player_count++];
         int x = playerInitialCoords[game->player_count - 1].x;
         int y = playerInitialCoords[game->player_count - 1].y;
+        player->id = game->player_count;
+
+        printf("\t- Player[%d]: %p\n", player->id, player);
 
         if (x == -1)
             x = game->map.width - 2;
         if (y == -1)
             y = game->map.height - 2;
-
-        printf("Player %d added at (%d, %d)\n", game->player_count, x, y);
 
         init_player(game, player, x, y);
     }
@@ -202,10 +203,12 @@ void draw_player_powerups(Game *game, Player *player)
 
 void draw_player_lives(Game *game, Player *player)
 {
-    // TODO: draw the player lives on the right side of the screen
+
     SDL_Rect powerup_rect = get_powerup_rect(POWERUP_LIFE);
     SDL_Color color = get_powerup_color(POWERUP_LIFE);
     SDL_Rect powerup_dst_rect = {0, window_height - UI_SIZE, UI_SIZE, UI_SIZE};
+
+    // printf("player lives: %d\n", player->lives);
 
     SDL_SetTextureColorMod(game->texture, color.r, color.g, color.b);
     int x = window_width - UI_SIZE;
@@ -498,6 +501,7 @@ void take_damage(Game *game, Player *player, int damage)
     }
 
     player->lives -= damage;
+    printf("Player %d has %d lives left\n", player->id, player->lives);
     if (player->lives <= 0)
     {
         kill_player(game, player);

@@ -12,6 +12,7 @@ void init_bomb(Bomb *bomb, Player *owner)
     bomb->is_active = false;
     bomb->is_moving = false;
     bomb->owner = owner;
+    bomb->damage = 1;
     bomb->sprite.src_rect = tileRects[BOMB];
     bomb->spread_timer = BOMB_SPREAD_LIFE_TIME;
     bomb->timer = BOMB_LIFE_TIME;
@@ -296,17 +297,14 @@ bool add_explosion(Game *game, Bomb *bomb, Direction direction, int col, int row
         }
     }
 
-    handle_player_explosion(game, bomb, col, row);
-
     if (game->map.data[row][col] == 'w')
     {
         handle_explosion_direction(game, bomb, direction, col, row, range);
         return true;
     }
 
-    if (game->map.data[row][col] == '.')
+    if (game->map.data[row][col] == '.' || handle_player_explosion(game, bomb, col, row))
     {
-
         handle_explosion_direction(game, bomb, direction, col, row, range);
         return true;
     }
@@ -406,7 +404,7 @@ void handle_explosion_direction(Game *game, Bomb *bomb, Direction direction, int
     }
 }
 
-void handle_player_explosion(Game *game, Bomb *bomb, int col, int row)
+bool handle_player_explosion(Game *game, Bomb *bomb, int col, int row)
 {
     if (is_tile_player(game->map.data[row][col]))
     {
@@ -418,15 +416,17 @@ void handle_player_explosion(Game *game, Bomb *bomb, int col, int row)
                 if (player->invincible_timer > 0)
                 {
                     player->invincible_timer = 0;
-                    break;
+                    return true;
                 }
 
                 take_damage(game, player, bomb->damage);
                 bomb->owner->score++;
-                break;
+                return true;
             }
         }
     }
+
+    return false;
 }
 
 bool drop_powerup(Game *game, int col, int row)
