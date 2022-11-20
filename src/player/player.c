@@ -223,7 +223,7 @@ void move_player(Game *game, Player *player, Direction direction)
         break;
     }
 
-    if (is_valid_move(game, &player_rect))
+    if (is_valid_move(game, player, &player_rect))
     {
 
         int x = player_rect.x / (TILE_SIZE * SCALE);
@@ -233,6 +233,13 @@ void move_player(Game *game, Player *player, Direction direction)
         if (powerup_in_the_way != NULL)
         {
             consume_powerup(game, player, powerup_in_the_way);
+        }
+
+        Bomb *bomb_in_the_way = collide_with_bomb(game, x, y);
+        if (bomb_in_the_way != NULL)
+        {
+            printf("BOMB IN THE WAY\nKicking it: %d\n", player->direction);
+            kick_bomb(game, bomb_in_the_way, direction);
         }
 
         player->direction = direction;
@@ -252,6 +259,21 @@ Powerup *collide_with_powerup(Game *game, int x, int y)
         if (powerup->is_active && powerup->sprite.dst_rect.x / (TILE_SIZE * SCALE) == x && powerup->sprite.dst_rect.y / (TILE_SIZE * SCALE) == y)
         {
             return powerup;
+        }
+    }
+
+    return NULL;
+}
+
+Bomb *collide_with_bomb(Game *game, int x, int y)
+{
+    for (int i = 0; i < MAX_NUMBER_OF_BOMBS; i++)
+    {
+        Bomb *other_bomb = &game->bombs[i];
+        // if (other_bomb->sprite.dst_rect.x / (TILE_SIZE * SCALE) == col && other_bomb->sprite.dst_rect.y / (TILE_SIZE * SCALE) == row)
+        if (other_bomb->is_active && other_bomb->sprite.dst_rect.x / (TILE_SIZE * SCALE) == x && other_bomb->sprite.dst_rect.y / (TILE_SIZE * SCALE) == y)
+        {
+            return other_bomb;
         }
     }
 
@@ -309,7 +331,7 @@ bool consume_powerup(Game *game, Player *player, Powerup *powerup)
     return true;
 }
 
-bool is_valid_move(Game *game, SDL_Rect *rect)
+bool is_valid_move(Game *game, Player *player, SDL_Rect *rect)
 {
     int row = rect->y / (TILE_SIZE * SCALE);
     int col = rect->x / (TILE_SIZE * SCALE);
@@ -319,7 +341,20 @@ bool is_valid_move(Game *game, SDL_Rect *rect)
         return false;
     }
 
-    return is_tile_empty(game->map.data[row][col]) || is_tile_powerup(game->map.data[row][col]) || is_tile_explosion(game->map.data[row][col]);
+    return is_tile_empty(game->map.data[row][col]) || is_tile_powerup(game->map.data[row][col]) || (player->can_kick && is_tile_bomb(game->map.data[row][col]));
+}
+
+bool kick_bomb(Game *game, Bomb *bomb, Direction direction)
+{
+    if (game == NULL || bomb == NULL)
+    {
+        return false;
+    }
+
+    bomb->is_moving = true;
+    bomb->direction = direction;
+
+    return true;
 }
 
 void update_players(Game *game)

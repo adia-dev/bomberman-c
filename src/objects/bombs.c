@@ -14,6 +14,8 @@ void init_bomb(Bomb *bomb, Player *owner)
     bomb->sprite.src_rect = tileRects[BOMB];
     bomb->spread_timer = BOMB_SPREAD_LIFE_TIME;
     bomb->timer = BOMB_LIFE_TIME;
+    bomb->move_delay = BOMB_MOVE_DELAY;
+    bomb->move_timer = BOMB_MOVE_DELAY;
     bomb->spreadCoordsCount = 0;
     bomb->spreadCoords = NULL;
     bomb->animation_timer = 0.0;
@@ -114,6 +116,19 @@ void update_bomb(Game *game, Bomb *bomb)
 
     if (bomb->is_active)
     {
+        if (bomb->is_moving)
+        {
+            bomb->move_timer -= game->delta_time;
+            printf("move timer: %f\n", bomb->move_timer);
+
+            if (bomb->move_timer <= 0.0)
+            {
+                bomb->move_delay = lerp(bomb->move_delay, 1000, 0.1);
+                bomb->move_timer = bomb->move_delay;
+                move_bomb(game, bomb, bomb->direction);
+            }
+        }
+
         if (bomb->timer <= 0)
         {
             explode_bomb(game, bomb);
@@ -147,6 +162,44 @@ void update_bomb(Game *game, Bomb *bomb)
             game->map.data[bomb->sprite.dst_rect.y / (TILE_SIZE * SCALE)][bomb->sprite.dst_rect.x / (TILE_SIZE * SCALE)] = ' ';
             bomb->spreadCoordsCount = 0;
             bomb->spread_timer = BOMB_SPREAD_LIFE_TIME;
+        }
+    }
+}
+
+void move_bomb(Game *game, Bomb *bomb, Direction direction)
+{
+    if (bomb->is_active)
+    {
+        SDL_Rect rect = bomb->sprite.dst_rect;
+        int old_row = rect.y / (TILE_SIZE * SCALE);
+        int old_col = rect.x / (TILE_SIZE * SCALE);
+        switch (direction)
+        {
+        case LEFT:
+            rect.x -= TILE_SIZE * SCALE;
+            break;
+        case RIGHT:
+            rect.x += TILE_SIZE * SCALE;
+            break;
+        case UP:
+            rect.y -= TILE_SIZE * SCALE;
+            break;
+        case DOWN:
+            rect.y += TILE_SIZE * SCALE;
+            break;
+        default:
+            break;
+        }
+
+        if (can_place_bomb(game, &rect))
+        {
+            bomb->sprite.dst_rect = rect;
+
+            game->map.data[old_row][old_col] = ' ';
+        }
+        else
+        {
+            bomb->is_moving = false;
         }
     }
 }

@@ -11,6 +11,7 @@ bool place_bomb(Game *game, Player *owner);
 bool can_place_bomb(Game *game, SDL_Rect *rect);
 void update_bombs(Game *game);
 void update_bomb(Game *game, Bomb *bomb);
+void move_bomb(Game *game, Bomb *bomb, Direction direction);
 void draw_bombs(Game *game);
 void draw_bomb(Game *game, Bomb *bomb);
 void explode_bomb(Game *game, Bomb *bomb);

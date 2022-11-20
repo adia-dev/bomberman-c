@@ -35,6 +35,7 @@ void update_powerup(Game *game, Powerup *powerup)
         powerup->timer += game->delta_time;
         if (powerup->timer >= powerup->lifetime)
         {
+            game->map.data[powerup->sprite.dst_rect.y / (TILE_SIZE * SCALE)][powerup->sprite.dst_rect.x / (TILE_SIZE * SCALE)] = ' ';
             init_powerup(powerup);
         }
     }
